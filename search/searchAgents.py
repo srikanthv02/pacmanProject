@@ -383,7 +383,6 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
-
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -401,7 +400,38 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    #let heuristic be 0
+    heuristic = 0
+    # lets calculate the farthest corner in the maze and calculate the cost to reach there
+    # Find all the corners that we haven't visited yet, and append them to a 
+    # list so we can go through them
+    #check for corners not visited by pacman
+  
+    # Find the average of the shortest distances between the unvisited corners. 
+    # for corner in corners_unvisited:
+    cornersVisitedByPacman = state[2]
+    dotInCorners = 0 
+    for corner in cornersVisitedByPacman:
+        dotExistsInCorners = corner[1]
+        dotCoordinates = corner[0]
+
+        if not dotExistsInCorners:
+            dotInCorners += 1
+            continue
+        
+        cornersVisitedByPacman = dotCoordinates
+        currentPositionOfPacman = state[0], state[1]
+        #applyting the manhattan distance formula and getting the distance calculation(As an absolute value)
+        distance = abs(cornersVisitedByPacman[0] - currentPositionOfPacman[0]) + abs(cornersVisitedByPacman[1] - currentPositionOfPacman[1])
+        
+        if distance > heuristic:
+            heuristic = distance 
+
+    if dotInCorners == len(corners):
+        return 0
+
+    return heuristic 
+    #return 0 # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -495,7 +525,16 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    #let heuristic be 0;
+    heuristic = 0
+    foodGridList = foodGrid.asList()
+    #appying the mazeDistance Formula
+    #if we apply manhattan the threshold value comes higher (So using the mazeDistance for a lesser value) 
+    for foodHeuristic in foodGridList:
+        heuristic = mazeDistance(position, foodHeuristic, problem.startingGameState)
+
+    return heuristic
+    #return 0
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -526,7 +565,30 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        fringe = util.Queue()
+        currentPosition = problem.getStartState()
+        
+        # Add a list along with the state to store the list of actions to get to
+        # the currentPosition
+        fringe.push((currentPosition, []))
+        visitedPosition = [currentPosition]
+        
+        while not fringe.isEmpty():
+            currentPosition, actionState = fringe.pop()
+            # check if current node is the goal
+            if problem.isGoalState(currentPosition):
+                return actionState
+            neighboursState = problem.getSuccessors(currentPosition)
+            #check if the list of neighboursState 
+            if neighboursState !=[]:
+                for item in neighboursState:
+                    newState, direction, cost = item
+                    if newState not in visitedPosition:
+                        visitedPosition.append(newState)
+                        fringe.push((newState, actionState + [direction]))
+
+        return []
+        #util.raiseNotDefined()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -562,7 +624,9 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        foodAvailable = self.food
+        return foodAvailable[x][y]
+       # util.raiseNotDefined()
 
 def mazeDistance(point1, point2, gameState):
     """
